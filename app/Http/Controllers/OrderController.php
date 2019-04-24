@@ -31,29 +31,23 @@ class OrderController extends Controller
 			'user_id' => 1
 		]);
 
-		$dataOrder = $request->only('table_number','payment_id','user_id');
+		$dataOrder = $request->only('table_number','payment_id','user_id', 'total');
 
 		$order = Order::create($dataOrder);
 
-		$dataDetail = $request->only('product_id','quantity','note');
+		$dataDetail = $request->only('product_id','quantity','note','subtotal');
 		$countDetail = count($dataDetail['product_id']);
 
 		for ($i=0; $i < $countDetail; $i++) { 
-
-			$product = Product::find($dataDetail['product_id'][$i]);
 			
 			$detail 			= new OrderDetail();
 			$detail->order_id 	= $order->id;
 			$detail->product_id = $dataDetail['product_id'][$i];
 			$detail->quantity 	= $dataDetail['quantity'][$i];
-			$detail->subtotal 	= $product->price * $detail->quantity;
+			$detail->subtotal 	= $dataDetail['subtotal'][$i];
 			$detail->save();
 
 		}
-		
-		$total = OrderDetail::where('order_id', $order->id)->sum('subtotal');
-
-		Order::find($order->id)->update(['total' => $total]);
 
 		return redirect('/orders');
 	}
@@ -63,5 +57,43 @@ class OrderController extends Controller
 		$order = Order::find($id);
 
 		return view('orders.show', compact('order'));
+	}
+
+	public function edit($id)
+	{
+		$order = Order::find($id);
+    	$payments = Payment::all();
+    	$products = Product::all();
+
+		return view('orders.edit', compact('order', 'payments', 'products'));
+	}
+
+	public function update(Request $request, $id)
+	{
+		$request->merge([
+			'user_id' => 1
+		]);
+
+		$dataOrder = $request->only('table_number','payment_id','user_id', 'total');
+
+		$order = Order::find($id)->update($dataOrder);
+
+		$dataDetail = $request->only('product_id','quantity','note','subtotal');
+		$countDetail = count($dataDetail['product_id']);
+
+		OrderDetail::where('order_id', $id)->delete();
+
+		for ($i=0; $i < $countDetail; $i++) { 
+			
+			$detail 			= new OrderDetail();
+			$detail->order_id 	= $id;
+			$detail->product_id = $dataDetail['product_id'][$i];
+			$detail->quantity 	= $dataDetail['quantity'][$i];
+			$detail->subtotal 	= $dataDetail['subtotal'][$i];
+			$detail->save();
+
+		}
+
+		return redirect('/orders');
 	}
 }

@@ -6,21 +6,26 @@
 <body>
 
 	<div id="app">
-		<form method="post" action="{{ route('orders.store') }}">
-			@csrf
+		<form method="post" action="{{ route('orders.update', $order->id) }}">
+			@csrf @method('PUT')
 
-			<h3>Create Order</h3>
+			<h3>Edit Order</h3>
 
 			<p>
 				Table Number: 
-				<input type="number" name="table_number">
+				<input type="number" name="table_number" value="{{ $order->table_number }}">
 			</p>
 
 			<p>
 				Payment: 
 				<select name="payment_id">
 					@foreach($payments as $payment)
-					<option value="{{ $payment->id }}">{{ $payment->name }}</option>
+						<option 
+							value="{{ $payment->id }}"
+							selected="{{ $order->payment_id == $payment->id }}" 
+						>
+							{{ $payment->name }}
+						</option>
 					@endforeach
 				</select>
 			</p>
@@ -78,7 +83,7 @@
 			el: '#app',
 			data: {
 				orders: [
-					{product_id: 0, quantity: 1, subtotal: 0},
+					{product_id: 0, quantity: 1, note:'', subtotal: 0},
 				],
 			},
 			methods: {
@@ -96,7 +101,7 @@
 			},
 			computed: {
 				total() {
-					return this.orders.map(item => item.subtotal).reduce((prev, next) => prev + next);
+					return this.orders.map(order => order.subtotal).reduce((prev, next) => prev + next);
 				},
 				products() {
 					let products = [];
@@ -109,6 +114,20 @@
 
 					return products;
 				}
+			},
+			created() {
+				let orders = [];
+
+				@foreach($order->orderDetail as $key => $detail)
+					orders[ {{$key}} ] = {
+						product_id: {{ $detail->product_id }},
+						quantity: {{ $detail->quantity }},
+						note: '{{ $detail->note }}',
+						subtotal: {{ $detail->subtotal }},
+					};
+				@endforeach
+
+				this.orders = orders;
 			}
 		});
 	</script>

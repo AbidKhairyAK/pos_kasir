@@ -35,7 +35,7 @@
 			<td>{{ $order->user->name }}</td>
 			<td>
 				<a href="{{ route('orders.show', $order->id) }}">Detail</a> 
-				<a href="#">Edit</a>
+				<a href="{{ route('orders.edit', $order->id) }}">Edit</a>
 				<a href="#">Delete</a>
 			</td>
 		</tr>
